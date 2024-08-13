@@ -1,6 +1,15 @@
 [package]
-name = "minigrep"
+name = "minigrep_david20019"
+license = "MIT OR Apache-2.0"
+description = "Command line utility that searches for a string in files."
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3

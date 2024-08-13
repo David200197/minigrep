@@ -1,23 +1,24 @@
-use std::{env, error::Error, fs};
+//! # Minigrep
+//! `Minigrep` is a command line utility that searches for a string in files.
 
-pub struct Config {
-    pub query: String,
-    pub file_path: String,
-    pub ignore_case: bool,
-}
+pub mod functions;
+pub mod structs;
 
-impl Config {
-    pub fn build(args: &[String]) -> Result<Self, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough argument");
-        }
-        let query = args[1].clone();
-        let file_path = args[2].clone();
-        let ignore_case = env::var("IGNORE_CASE").is_ok();
-        Ok(Config { query, file_path, ignore_case })
-    }
-}
+use std::{error::Error, fs};
 
+pub use functions::search::{search, search_case_insensitive};
+pub use structs::config::Config;
+
+/// search the text in the given file and return the lines that contain the query string
+///
+/// # Example
+///
+/// ```
+/// let config = minigrep::Config::new("rust".to_string() , "./poem.txt".to_string());
+/// let result = minigrep::run(config).unwrap();
+///
+/// assert_eq!(result, ());
+/// ```
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let contents = fs::read_to_string(config.file_path)?;
 
@@ -34,58 +35,3 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let mut results: Vec<&str> = vec![];
-
-    for line in contents.lines() {
-        if line.contains(query) {
-            results.push(line.trim());
-        }
-    }
-    return results;
-}
-
-fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let query = query.to_lowercase();
-    let mut results: Vec<&str> = vec![];
-
-    for line in contents.lines() {
-        if line.to_lowercase().contains(&query) {
-            results.push(line.trim());
-        }
-    }
-    return results;
-}
-
-#[cfg(test)]
-mod tests {
-    use std::vec;
-
-    use super::*;
-
-    fn get_content_example() -> &'static str {
-        "\
-        Rust:
-        safe, fast, productive.
-        Pick three.
-        Trust me."
-    }
-
-    #[test]
-    fn case_sensitive() {
-        let query = "duct";
-        let contents = get_content_example();
-
-        assert_eq!(vec!["safe, fast, productive."], search(query, contents))
-    }
-
-    #[test]
-    fn case_insensitive() {
-        let query = "rUsT";
-        let contents = get_content_example();
-        assert_eq!(
-            vec!["Rust:", "Trust me."],
-            search_case_insensitive(query, contents)
-        );
-    }
-}
